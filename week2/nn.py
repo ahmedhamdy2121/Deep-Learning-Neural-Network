@@ -280,7 +280,7 @@ plt.show()
 ## NO = 7
 ## Try Again = 10
 ## continue = 11
-answer = windll.user32.MessageBoxW(0, "Show Wrong classified images in test dataset?", "Wrong classified images", 3)
+answer = windll.user32.MessageBoxW(0, "Show wrong classified images in test dataset?", "Wrong classified images", 3)
 if not answer == 2:
     counter = 1
     Y_prediction_test = d['Y_prediction_test']
@@ -295,6 +295,44 @@ if not answer == 2:
                 plt.show()
             print (s)
             counter += 1
+
+# choice of learning rate
+answer = windll.user32.MessageBoxW(0, "Run the learning rate comparison?", "Choice of learning rate", 1)
+if answer == 1:
+    learning_rates = [0.01, 0.001, 0.0001]
+    models = {}
+    for i in learning_rates:
+        print ("learning rate is: " + str(i))
+        models[str(i)] = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 1500, learning_rate = i, print_cost = False)
+        print ('\n' + "-------------------------------------------------------" + '\n')
+
+    for i in learning_rates:
+        plt.plot(np.squeeze(models[str(i)]["costs"]), label= str(models[str(i)]["learning_rate"]))
+
+    plt.ylabel('cost')
+    plt.xlabel('iterations')
+
+    legend = plt.legend(loc='upper center', shadow=True)
+    frame = legend.get_frame()
+    frame.set_facecolor('0.90')
+    plt.show()
+    stdout.flush()
+
+# check external image
+answer = windll.user32.MessageBoxW(0, "Try the model with external image?", "External image", 1)
+if answer == 1:
+    # change this to the name of the image file 
+    my_image = "cat1.jpg"
+
+    # preprocess the image to fit the algorithm
+    fname = "datasets/" + my_image
+    image = np.array(ndimage.imread(fname, flatten = False))
+    my_image = scipy.misc.imresize(image, size = (num_px, num_px)).reshape((1, num_px * num_px * 3)).T
+    my_predicted_image = predict(d["w"], d["b"], my_image)
+
+    plt.imshow(image)
+    print("y = " + str(np.squeeze(my_predicted_image)) + ", your algorithm predicts a \"" +
+        classes[int(np.squeeze(my_predicted_image)), ].decode("utf-8") + "\" picture.")
 
 ### ============================================ Debugging Run ==================================================== ###
 def test_run():
