@@ -99,12 +99,12 @@ def propagate(w, b, X, Y):
     
     # FORWARD PROPAGATION (FROM X TO COST)
     A = sigmoid(np.dot(w.T,  X) + b) # compute activation
-    cost = (-1. / m) * np.sum(Y * np.log(A) + (1 - Y) * np.log(1 - A), axis=1) # compute cost # cols sums
+    cost = (-1. / m) * np.sum(Y * np.log(A) + (1 - Y) * np.log(1 - A), axis = 1, keepdims = True) # compute cost # cols sums
     # Note: np.multiply is equivalent to *
 
     # BACKWARD PROPAGATION (TO FIND GRAD)
     dw = (1. / m) * np.dot(X, ((A - Y).T))
-    db = (1. / m) * np.sum(A - Y, axis=1) # cols sum
+    db = (1. / m) * np.sum(A - Y, axis = 1, keepdims = True) # cols sum
 
     assert(dw.shape == w.shape)
     assert(db.dtype == float)
@@ -284,7 +284,7 @@ answer = windll.user32.MessageBoxW(0, "Show wrong classified images in test data
 if not answer == 2:
     counter = 1
     Y_prediction_test = d['Y_prediction_test']
-    for i in range(test_set_x_orig.shape[0]):
+    for i in range(0, test_set_x_orig.shape[0]):
         if Y_prediction_test[:, i] != test_set_y[:, i]:
             s = "y = " + str(test_set_y[0, i]) + ", you predicted that it is a \"" + \
                 classes[Y_prediction_test[0, i]].decode("utf-8") + "\" picture."
@@ -295,6 +295,7 @@ if not answer == 2:
                 plt.show()
             print (s)
             counter += 1
+    stdout.flush()
 
 # choice of learning rate
 answer = windll.user32.MessageBoxW(0, "Run the learning rate comparison?", "Choice of learning rate", 1)
