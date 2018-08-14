@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from tf_utils import load_dataset, random_mini_batches, convert_to_one_hot, predict
 from sys import stdout
+import time
+import inspect
 
 np.random.seed(1)
 
@@ -166,6 +168,9 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
     Returns:
     parameters -- parameters learnt by the model. They can then be used to predict.
     """
+
+    # time
+    tic = time.process_time()
     
     tf.reset_default_graph()                          # to be able to rerun the model without overwriting tf variables
     tf.set_random_seed(1)                             # to keep consistent results
@@ -198,9 +203,14 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
     ### START CODE HERE ### (1 line)
     optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(cost)
     ### END CODE HERE ###
-    
+
     # Initialize all the variables
     init = tf.global_variables_initializer()
+
+    # file for early stop (not recommended to use!)
+    early_stop = open("early_stop.txt",'r')
+
+    print("\nStart training...")
 
     # Start the session to compute the tensorflow graph
     with tf.Session() as sess:
@@ -233,9 +243,20 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
             if print_cost == True and epoch % 100 == 0:
                 print ("Cost after epoch %i: %f" % (epoch, epoch_cost))
                 stdout.flush()
-            if print_cost == True and epoch % 5 == 0:
+                early_stop.seek(0)
+                if early_stop.read() == 'True':
+                    print ("Early Stopped (not recommended)!")
+                    costs.append(epoch_cost)
+                    break
+            if epoch % 5 == 0:
                 costs.append(epoch_cost)
-                
+
+        # time
+        toc = time.process_time()
+
+        # close early stop file
+        early_stop.close()
+
         # plot the cost
         plt.plot(np.squeeze(costs))
         plt.ylabel('cost')
@@ -245,7 +266,7 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
 
         # lets save the parameters in a variable
         parameters = sess.run(parameters)
-        print ("Parameters have been trained!")
+        print ("\nParameters have been trained!")
 
         # Calculate the correct predictions
         correct_prediction = tf.equal(tf.argmax(Z3), tf.argmax(Y))
@@ -255,6 +276,12 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
 
         print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
         print ("Test Accuracy:", accuracy.eval({X: X_test, Y: Y_test}))
+        
+        print("\nnumber of trainable parameters: " + str(np.sum([np.prod(v.get_shape().as_list()) for v in tf.trainable_variables()])))
+        print ("\ntime: %.3f" % (toc - tic) + " sec, for parameters: ")
+        args, _, _, values = inspect.getargvalues(inspect.currentframe())
+        [print("{}: {}".format(i, values[i])) for i in args[4:]]
+        
         stdout.flush()
 
         # Showing plots for non blocking
@@ -263,4 +290,4 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
         return parameters
 
 ### Main ###
-parameters = model(X_train, Y_train, X_test, Y_test, keep_prob = [1, 1], minibatch_size = 64)
+parameters = model(X_train, Y_train, X_test, Y_test, keep_prob = [1, 1], minibatch_size = 64, epochs = 1500)
